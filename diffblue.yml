@@ -1,0 +1,983 @@
+buildCmd: mvn -e -X -Dlicense.skip=true -Dmaven.enforcer.skip=true -Denforcer.skip=true -Dair.check.skip-all=true -Dair.check.skip-all=true -Dmaven.test.skip=true compile
+testCmd: true
+skipVerification: true
+# Copyright 2019 Diffblue Limited. All Rights Reserved.
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    # Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy
+      smart-harness: simplest-constructor-and-nondet
+  -
+    # Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    # Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    # PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseString.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseString.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/server/parser/ServerParse.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/parser/ServerParse.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/HexFormatUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/HexFormatUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ArrayUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ArrayUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/server/parser/ServerParseStart.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/parser/ServerParseStart.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/config/util/ConfigUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/util/ConfigUtil.java
+   - dir: target/classes
+     file: io/mycat/config/util/ConfigUtil$2.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/util/ConfigUtil.java
+   - dir: target/classes
+     file: io/mycat/util/StringUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/StringUtil.java
+   - dir: target/classes
+     file: io/mycat/config/util/ConfigException.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/util/ConfigException.java
+   - dir: target/classes
+     file: io/mycat/config/util/BeanConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/util/BeanConfig.java
+   - dir: target/classes
+     file: io/mycat/config/util/ConfigUtil$1.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/util/ConfigUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/util/SQLParserUtils.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/SQLParserUtils.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/SQLParserUtils$State.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/SQLParserUtils.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+   - dir: target/classes
+     file: io/mycat/route/parser/druid/MycatLexer.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/druid/MycatLexer.java
+   - dir: target/classes
+     file: io/mycat/route/parser/druid/MycatStatementParser.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/druid/MycatStatementParser.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/CharTypes.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/CharTypes.java
+   - dir: target/classes
+     file: io/mycat/route/parser/druid/MycatExprParser.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/druid/MycatExprParser.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/memory/unsafe/utils/JavaUtils.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/unsafe/utils/JavaUtils.java
+   - dir: target/classes
+     file: io/mycat/memory/unsafe/utils/ByteUnit.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/unsafe/utils/ByteUnit.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/util/RouterUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/util/RouterUtil.java
+   - dir: target/classes
+     file: io/mycat/route/util/RouterUtil$1.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/util/RouterUtil.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/nio/handler/MultiNodeQueryHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/nio/handler/MultiNodeQueryHandler.java
+   - dir: target/classes
+     file: io/mycat/config/model/rule/RuleConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/rule/RuleConfig.java
+   - dir: target/classes
+     file: io/mycat/net/FrontendConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/FrontendConnection.java
+   - dir: target/classes
+     file: io/mycat/server/response/ShowFullTables.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/response/ShowFullTables.java
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/DataMergeService.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/DataMergeService.java
+   - dir: target/classes
+     file: io/mycat/route/RouteResultset.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/RouteResultset.java
+   - dir: target/classes
+     file: io/mycat/net/NIOProcessor.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/NIOProcessor.java
+   - dir: target/classes
+     file: io/mycat/route/util/RouterUtil$3.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/util/RouterUtil.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/nio/handler/RollbackReleaseHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/nio/handler/RollbackReleaseHandler.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/nio/handler/SingleNodeHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/nio/handler/SingleNodeHandler.java
+   - dir: target/classes
+     file: io/mycat/server/NonBlockingSession.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/NonBlockingSession.java
+   - dir: target/classes
+     file: io/mycat/server/ServerConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/ServerConnection.java
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/ColumnRoutePair.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/ColumnRoutePair.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/nio/handler/ResponseHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/nio/handler/ResponseHandler.java
+   - dir: target/classes
+     file: io/mycat/server/parser/ServerParseShow.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/parser/ServerParseShow.java
+   - dir: target/classes
+     file: io/mycat/buffer/BufferPool.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/buffer/BufferPool.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/nio/handler/GetConnectionHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/nio/handler/GetConnectionHandler.java
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/PackWraper.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/PackWraper.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/ErrorPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/ErrorPacket.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/nio/handler/MultiNodeHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/nio/handler/MultiNodeHandler.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/MySQLPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/MySQLPacket.java
+   - dir: target/classes
+     file: io/mycat/net/SocketWR.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/SocketWR.java
+   - dir: target/classes
+     file: io/mycat/route/SessionSQLPair.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/SessionSQLPair.java
+   - dir: target/classes
+     file: io/mycat/backend/datasource/PhysicalDatasource.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/datasource/PhysicalDatasource.java
+   - dir: target/classes
+     file: io/mycat/backend/datasource/PhysicalDBPool.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/datasource/PhysicalDBPool.java
+   - dir: target/classes
+     file: io/mycat/backend/ConQueue.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/ConQueue.java
+   - dir: target/classes
+     file: io/mycat/net/AbstractConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/AbstractConnection.java
+   - dir: target/classes
+     file: io/mycat/backend/datasource/PhysicalDBNode.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/datasource/PhysicalDBNode.java
+   - dir: target/classes
+     file: io/mycat/MycatServer.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/MycatServer.java
+   - dir: target/classes
+     file: io/mycat/backend/datasource/PhysicalDatasource$1.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/datasource/PhysicalDatasource.java
+   - dir: target/classes
+     file: io/mycat/config/model/SystemConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/SystemConfig.java
+   - dir: target/classes
+     file: io/mycat/config/model/SchemaConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/SchemaConfig.java
+   - dir: target/classes
+     file: io/mycat/route/function/AbstractPartitionAlgorithm.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/function/AbstractPartitionAlgorithm.java
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/AbstractDataNodeMerge.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/AbstractDataNodeMerge.java
+   - dir: target/classes
+     file: io/mycat/route/parser/druid/RouteCalculateUnit.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/druid/RouteCalculateUnit.java
+   - dir: target/classes
+     file: io/mycat/route/RouteResultsetNode.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/RouteResultsetNode.java
+   - dir: target/classes
+     file: io/mycat/backend/BackendConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/BackendConnection.java
+   - dir: target/classes
+     file: io/mycat/util/StringUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/StringUtil.java
+   - dir: target/classes
+     file: io/mycat/route/function/SlotFunction.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/function/SlotFunction.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/BufferUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/BufferUtil.java
+   - dir: target/classes
+     file: io/mycat/backend/ConMap.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/ConMap.java
+   - dir: target/classes
+     file: io/mycat/config/model/DBHostConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/DBHostConfig.java
+   - dir: target/classes
+     file: io/mycat/util/CompressUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/CompressUtil.java
+   - dir: target/classes
+     file: io/mycat/backend/heartbeat/DBHeartbeat.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/heartbeat/DBHeartbeat.java
+   - dir: target/classes
+     file: io/mycat/cache/LayerCachePool.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/cache/LayerCachePool.java
+   - dir: target/classes
+     file: io/mycat/config/model/TableConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/TableConfig.java
+   - dir: target/classes
+     file: io/mycat/backend/loadbalance/LoadBalance.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/loadbalance/LoadBalance.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/MySQLMessage.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/MySQLMessage.java
+   - dir: target/classes
+     file: io/mycat/route/parser/druid/DruidShardingParseInfo.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/druid/DruidShardingParseInfo.java
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/DataNodeMergeManager.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/DataNodeMergeManager.java
+   - dir: target/classes
+     file: io/mycat/memory/MyCatMemory.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/MyCatMemory.java
+   - dir: target/classes
+     file: io/mycat/server/response/ShowTables.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/response/ShowTables.java
+   - dir: target/classes
+     file: io/mycat/config/MycatConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/MycatConfig.java
+   - dir: target/classes
+     file: io/mycat/config/model/DataHostConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/DataHostConfig.java
+   - dir: target/classes
+     file: io/mycat/route/util/RouterUtil$2.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/util/RouterUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseRollback.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseRollback.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseKill.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseKill.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseStop.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseStop.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/Pair.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/Pair.java
+   - dir: target/classes
+     file: io/mycat/util/SplitUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/SplitUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseHeartbeat.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseHeartbeat.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/Pair.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/Pair.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseSwitch.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseSwitch.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/Pair.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/Pair.java
+   - dir: target/classes
+     file: io/mycat/util/SplitUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/SplitUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/StringUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/StringUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/jdbc/mongodb/MongoData.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/jdbc/mongodb/MongoData.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/mysql/PacketUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/PacketUtil.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/CharsetUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/CharsetUtil.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/ErrorPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/ErrorPacket.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/FieldPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/FieldPacket.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/ResultSetHeaderPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/ResultSetHeaderPacket.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/MySQLMessage.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/MySQLMessage.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/BufferUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/BufferUtil.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/BinaryPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/BinaryPacket.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/MySQLPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/MySQLPacket.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/FormatUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/FormatUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/manager/response/ShowWhiteHost.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/manager/response/ShowWhiteHost.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/OkPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/OkPacket.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/RowDataPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/RowDataPacket.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/FieldPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/FieldPacket.java
+   - dir: target/classes
+     file: io/mycat/net/AbstractConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/AbstractConnection.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/ResultSetHeaderPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/ResultSetHeaderPacket.java
+   - dir: target/classes
+     file: io/mycat/manager/ManagerConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/manager/ManagerConnection.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/MySQLMessage.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/MySQLMessage.java
+   - dir: target/classes
+     file: io/mycat/MycatServer.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/MycatServer.java
+   - dir: target/classes
+     file: io/mycat/config/model/FirewallConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/FirewallConfig.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/EOFPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/EOFPacket.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/PacketUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/PacketUtil.java
+   - dir: target/classes
+     file: io/mycat/buffer/BufferPool.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/buffer/BufferPool.java
+   - dir: target/classes
+     file: io/mycat/net/NIOProcessor.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/NIOProcessor.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/CharsetUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/CharsetUtil.java
+   - dir: target/classes
+     file: io/mycat/config/model/FirewallConfig$IgnoreDTDEntityResolver.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/FirewallConfig.java
+   - dir: target/classes
+     file: io/mycat/config/MycatConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/MycatConfig.java
+   - dir: target/classes
+     file: io/mycat/util/StringUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/StringUtil.java
+   - dir: target/classes
+     file: io/mycat/config/model/UserConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/UserConfig.java
+   - dir: target/classes
+     file: io/mycat/net/FrontendConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/FrontendConnection.java
+   - dir: target/classes
+     file: io/mycat/util/CompressUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/CompressUtil.java
+   - dir: target/classes
+     file: io/mycat/config/model/SystemConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/SystemConfig.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/ErrorPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/ErrorPacket.java
+   - dir: target/classes
+     file: io/mycat/backend/mysql/BufferUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/BufferUtil.java
+   - dir: target/classes
+     file: io/mycat/net/SocketWR.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/SocketWR.java
+   - dir: target/classes
+     file: io/mycat/net/mysql/MySQLPacket.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/net/mysql/MySQLPacket.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseClear.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseClear.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/mysql/BufferUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/BufferUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/MergeCol.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/MergeCol.java
+   - dir: target/classes
+     file: io/mycat/sqlengine/mpp/ColMeta.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/sqlengine/mpp/ColMeta.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseShow.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseShow.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseHeartbeat.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseHeartbeat.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/FastByteOperations.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/FastByteOperations.java
+   - dir: target/classes
+     file: io/mycat/util/FastByteOperations$ByteOperations.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/FastByteOperations.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/IntegerUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/IntegerUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/RandomUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/RandomUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/function/NumberParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/function/NumberParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/ByteUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/ByteUtil.java
+   - dir: target/classes
+     file: io/mycat/util/DateUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/DateUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/MysqlDefs.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/MysqlDefs.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/LongUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/LongUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseReload.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseReload.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/mysql/StreamUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/StreamUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/server/parser/ServerParseShow.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/parser/ServerParseShow.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/CompareUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/CompareUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/util/ObjectUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/util/ObjectUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/jdbc/sequoiadb/SequoiaData.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/jdbc/sequoiadb/SequoiaData.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/memory/unsafe/array/ByteArrayMethods.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/unsafe/array/ByteArrayMethods.java
+   - dir: target/classes
+     file: io/mycat/memory/unsafe/Platform.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/unsafe/Platform.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/mysql/SecurityUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/SecurityUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/util/WildcardUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/WildcardUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/parser/ManagerParseSelect.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/ManagerParseSelect.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/server/parser/ServerParseSelect.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/parser/ServerParseSelect.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/CharTypes.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/CharTypes.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/function/PartitionByJumpConsistentHash.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/function/PartitionByJumpConsistentHash.java
+   - dir: target/classes
+     file: io/mycat/route/function/AbstractPartitionAlgorithm.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/function/AbstractPartitionAlgorithm.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/backend/mysql/ByteUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/backend/mysql/ByteUtil.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/memory/unsafe/utils/BytesTools.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/unsafe/utils/BytesTools.java
+   - dir: target/classes
+     file: io/mycat/memory/unsafe/utils/BytesTools$Comparer.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/memory/unsafe/utils/BytesTools.java
+ - target:
+   - dir: target/classes
+     file: io/mycat/route/RouteService.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/RouteService.java
+   - dir: target/classes
+     file: io/mycat/cache/CacheService.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/cache/CacheService.java
+   - dir: target/classes
+     file: io/mycat/server/parser/ServerParse.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/parser/ServerParse.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintCatletHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintCatletHandler.java
+   - dir: target/classes
+     file: io/mycat/cache/LayerCachePool.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/cache/LayerCachePool.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintDataNodeHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintDataNodeHandler.java
+   - dir: target/classes
+     file: io/mycat/route/RouteStrategy.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/RouteStrategy.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintSQLHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintSQLHandler.java
+   - dir: target/classes
+     file: io/mycat/route/parser/util/ParseUtil.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/parser/util/ParseUtil.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintHandler.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintSchemaHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintSchemaHandler.java
+   - dir: target/classes
+     file: io/mycat/config/model/SchemaConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/SchemaConfig.java
+   - dir: target/classes
+     file: io/mycat/route/factory/RouteStrategyFactory.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/factory/RouteStrategyFactory.java
+   - dir: target/classes
+     file: io/mycat/config/model/SystemConfig.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/config/model/SystemConfig.java
+   - dir: target/classes
+     file: io/mycat/route/RouteResultsetNode.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/RouteResultsetNode.java
+   - dir: target/classes
+     file: io/mycat/route/RouteResultset.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/RouteResultset.java
+   - dir: target/classes
+     file: io/mycat/server/ServerConnection.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/server/ServerConnection.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintHandlerFactory.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintHandlerFactory.java
+   - dir: target/classes
+     file: io/mycat/cache/CachePool.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/cache/CachePool.java
+   - dir: target/classes
+     file: io/mycat/route/handler/HintMasterDBHandler.class
+     sourceDir: src/main/java
+     sourceFile: io/mycat/route/handler/HintMasterDBHandler.java
