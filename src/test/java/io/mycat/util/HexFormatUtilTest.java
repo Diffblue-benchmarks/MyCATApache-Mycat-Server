@@ -1,24 +1,61 @@
 package io.mycat.util;
 
+import io.mycat.util.HexFormatUtil;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.Timeout;
 
-/**
- * 
- * @author CrazyPig
- * @since 2016-09-09
- *
- */
+import java.lang.reflect.Array;
+
 public class HexFormatUtilTest {
-	
-	@Test
-	public void testBytesToString() {
-		byte[] bytes = new byte[]{
-			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
-		};
-		String hexString = HexFormatUtil.bytesToHexString(bytes);
-		String expected = "0102030405060708090A0B0C0D0E0F1011121314";
-		Assert.assertEquals(expected, hexString);
-	}
 
+  @Rule public final ExpectedException thrown = ExpectedException.none();
+
+  @Rule public final Timeout globalTimeout = new Timeout(10000);
+
+  /* testedClasses: HexFormatUtil */
+  // Test written by Diffblue Cover.
+  @Test
+  public void bytesToHexStringInput0OutputNotNull() {
+
+    // Arrange
+    final byte[] bytes = {};
+
+    // Act
+    final String actual = HexFormatUtil.bytesToHexString(bytes);
+
+    // Assert result
+    Assert.assertEquals(",", actual);
+  }
+
+  // Test written by Diffblue Cover.
+
+  @Test
+  public void bytesToHexStringInput1OutputNotNull() {
+
+    // Arrange
+    final byte[] bytes = {(byte)-104};
+
+    // Act
+    final String actual = HexFormatUtil.bytesToHexString(bytes);
+
+    // Assert result
+    Assert.assertEquals("98", actual);
+  }
+
+  // Test written by Diffblue Cover.
+  @Test
+  public void fromHexInputNotNullOutput1() {
+
+    // Arrange
+    final String src = "1234";
+
+    // Act
+    final byte[] actual = HexFormatUtil.fromHex(src);
+
+    // Assert result
+    Assert.assertArrayEquals(new byte[] {(byte)52}, actual);
+  }
 }
